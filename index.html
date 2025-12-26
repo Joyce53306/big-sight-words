@@ -8,32 +8,32 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { --bg-color: #f0f7f4; --pink: #ffc2d1; --blue: #bde0fe; --green: #58cc02; }
-        body { font-family: 'Arial Rounded MT Bold', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        body { font-family: sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; }
         #start-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        #start-btn { padding: 20px 50px; font-size: 30px; border-radius: 50px; background: #ffda08; border: none; cursor: pointer; font-weight: bold; }
-        #header { font-size: 26px; font-weight: bold; color: #444; }
+        #start-btn { padding: 20px 50px; font-size: 30px; border-radius: 50px; background: #ffda08; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .star-container { font-size: 35px; height: 50px; margin: 10px 0; color: #ffcc00; text-shadow: 1px 1px #888; }
         .button-container { display: flex; justify-content: center; gap: 20px; width: 100%; margin: 20px 0; }
-        .word-btn { width: 150px; height: 150px; border-radius: 50%; border: 6px solid white; font-size: 26px; font-weight: bold; box-shadow: 0 8px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: #333; }
+        .word-btn { width: 140px; height: 140px; border-radius: 50%; border: 6px solid white; font-size: 26px; font-weight: bold; box-shadow: 0 8px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: #333; }
         .btn-pink { background-color: var(--pink); }
         .btn-blue { background-color: var(--blue); }
         .correct-anim { transform: scale(1.1); border-color: var(--green); border-width: 8px; }
         #controls { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
-        .action-btn { padding: 15px 30px; border-radius: 50px; border: 2px solid #ddd; background-color: #fff; font-size: 18px; font-weight: bold; width: 85%; max-width: 320px; }
+        .action-btn { padding: 15px 30px; border-radius: 50px; border: 2px solid #ddd; background-color: #fff; font-size: 18px; font-weight: bold; width: 85%; max-width: 320px; cursor: pointer; }
         .record-btn { background-color: #ffd6a5; }
-        .recording { background-color: #ff6b6b !important; color: white; }
+        .recording { background-color: #ff6b6b !important; color: white; animation: pulse 1s infinite; }
         .play-btn { background-color: #c1fba4; }
         #next-btn { background-color: var(--green); color: white; font-size: 24px; border: none; display: none; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="start-overlay">
-        <h1>Big Class Sight Words</h1>
+        <h1 style="margin-bottom: 30px;">Ready?</h1>
         <button id="start-btn" onclick="startGame()">點我開始玩！</button>
     </div>
 
-    <div id="header">找到正確的單字！</div>
+    <div id="header" style="font-size:24px; font-weight:bold; color:#555;">大班 Sight Words 挑戰</div>
     <div class="star-container" id="star-display"></div>
 
     <div class="button-container">
@@ -51,8 +51,20 @@
     <script>
         const wordList = ["would", "I", "be", "No", "got", "tried", "can't", "ball", "one", "with", "which", "better", "may", "have", "first", "please", "What", "today", "need", "does", "a", "look", "see", "while", "David", "did", "draw", "his", "will", "not", "know", "That's", "for", "me", "put", "where", "if", "grow", "make"];
         let targetWord = "", currentOptions = [], stars = 0, mediaRecorder, audioChunks = [], canClick = true;
+        
+        // 載入 Final Fantasy 勝利音效
+        const victoryAudio = new Audio('https://www.myinstants.com/media/sounds/final-fantasy-vii-victory-fanfare-1.mp3');
 
-        function startGame() { document.getElementById('start-overlay').style.display = 'none'; initGame(); }
+        function startGame() { 
+            document.getElementById('start-overlay').style.display = 'none'; 
+            // 預熱音效避免延遲
+            victoryAudio.volume = 0;
+            victoryAudio.play().then(() => {
+                victoryAudio.pause();
+                victoryAudio.volume = 1;
+            }).catch(() => {});
+            initGame(); 
+        }
 
         function initGame() {
             canClick = true;
@@ -75,11 +87,6 @@
             u.lang = 'en-US'; u.rate = 0.75; window.speechSynthesis.speak(u);
         }
 
-        function playVictorySound() {
-            const u = new SpeechSynthesisUtterance("Great job! You got five stars!");
-            u.lang = 'en-US'; u.pitch = 1.5; u.rate = 1.2; window.speechSynthesis.speak(u);
-        }
-
         function checkAnswer(index) {
             if (!canClick) return;
             if (currentOptions[index] === targetWord) {
@@ -88,28 +95,27 @@
                 updateStars();
                 
                 if (stars >= 5) {
-                    confetti({ particleCount: 300, spread: 100, origin: { y: 0.5 } });
-                    playVictorySound();
+                    confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 } });
+                    victoryAudio.currentTime = 0; // 從頭播放
+                    victoryAudio.play();
                     setTimeout(() => {
-                        alert("🎉 太棒了！集滿五顆星星囉！");
-                        stars = 0; // 重置星星
+                        alert("🏆 恭喜！你是 Sight Words 小達人！");
+                        stars = 0;
                         initGame();
-                    }, 500);
+                    }, 100);
                 } else {
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                    const correctBtn = index === 0 ? 'btn-left' : 'btn-right';
-                    document.getElementById(correctBtn).classList.add('correct-anim');
+                    document.getElementById(index === 0 ? 'btn-left' : 'btn-right').classList.add('correct-anim');
                     document.getElementById('next-btn').style.display = 'block';
                 }
-            } else {
-                alert("再聽一次喔！是 " + targetWord);
-                playTargetWord();
+            } else { 
+                alert("再聽一次喔！是 " + targetWord); 
+                playTargetWord(); 
             }
         }
 
-        function updateStars() {
-            const display = document.getElementById('star-display');
-            display.innerText = stars === 0 ? "Ready!" : "⭐".repeat(stars);
+        function updateStars() { 
+            document.getElementById('star-display').innerText = stars === 0 ? "Ready!" : "⭐".repeat(stars); 
         }
 
         async function toggleRecording() {
@@ -132,7 +138,7 @@
                     mediaRecorder.start();
                     btn.classList.add('recording');
                     btn.innerText = "正在錄音...";
-                } catch (err) { alert("請開啟麥克風權限"); }
+                } catch (err) { alert("請點擊網址旁的鎖頭，開啟「麥克風」權限喔！"); }
             }
         }
 
